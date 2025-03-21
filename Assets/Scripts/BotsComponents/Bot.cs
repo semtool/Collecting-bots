@@ -1,11 +1,12 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Router))]
+[RequireComponent(typeof(ColorChanger))]
 public class Bot : MonoBehaviour
 {
     [SerializeField] private BaseStorage _base;
 
-    private Renderer _renderer;
+    private ColorChanger _colorChanger;
 
     public bool IsBusy { get; private set; }
 
@@ -15,35 +16,31 @@ public class Bot : MonoBehaviour
     {
         BotRouter = GetComponent<Router>();
 
-        _renderer = gameObject.GetComponent<Renderer>();
+        _colorChanger = GetComponent<ColorChanger>();
     }
 
     private void Start()
     {
-        IsBusy = false;
-
-        SetColor();
+        MakeNotBusy();
     }
-
 
     private void OnEnable()
     {
         BotRouter.IsFree += MakeNotBusy;
     }
 
-    private void SetColor()
-    {
-        _renderer.material.color = Color.black;
-    }
-
     public void MakeBusy()
     {
         IsBusy = true;
+
+        _colorChanger.SetColor(Color.black);
     }
 
-    public void MakeNotBusy()
+    private void MakeNotBusy()
     {
         IsBusy = false;
+
+        _colorChanger.SetColor(Color.green);
     }
 
     private void OnDisable()

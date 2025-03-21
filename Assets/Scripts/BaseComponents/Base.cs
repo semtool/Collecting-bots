@@ -1,72 +1,100 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(BaseStorage))]
 [RequireComponent(typeof(BaseRadar))]
+[RequireComponent(typeof(BaseStorage))]
+[RequireComponent(typeof(GlobalResourceStorage))]
 public class Base : MonoBehaviour
 {
     [SerializeField] private BallSpawner _spawner;
-    [SerializeField] private BaseStorage _baseStorage;
+    [SerializeField] private List<Bot> _botList = new();
 
-    private List<Ball> balls;
+    private BaseStorage _baseStorage;
+    private GlobalResourceStorage _globalStorage;
     private BaseRadar _radar;
-
-    public event Action<Collider> IsGet;
+    private WaitForSeconds _wait;
+    private float _interval = 1f;
 
     private void Awake()
     {
-        _baseStorage = GetComponent<BaseStorage>();
-
         _radar = GetComponent<BaseRadar>();
 
-        balls = new List<Ball>();
+        _baseStorage = GetComponent<BaseStorage>();
+
+        _globalStorage = GetComponent<GlobalResourceStorage>();
+
+        _wait = new WaitForSeconds(_interval);
+    }
+
+    private void Start()
+    {
+        StartCoroutine(SendBotsToBalls());
     }
 
     private void OnEnable()
     {
-        _radar.AreDetected += ChooseBot;
+        _radar.AreDetected += SendBallsToGlobalStorage;
+
+        _baseStorage.IsTouched += _globalStorage.DeleteItemFromBusyCollection;
     }
 
-    private void ChooseBot(Collider[] bots, Collider[] balls)
+    private IEnumerator SendBotsToBalls()
     {
-        foreach (var init in bots)
+        while (enabled)
         {
-            if (init.TryGetComponent(out Bot bot))
+            SendBotToBall();
+
+            yield return _wait;
+        }
+    }
+
+    private void SendBotToBall()
+    {
+        foreach (var unit in _botList)
+        {
+            if (unit.IsBusy == false)
             {
-                if (bot.IsBusy == false)
+                Ball ball = TakeFreeBall();
+
+                if (ball != null)
                 {
-                    Ball ball = GetOneCoin(balls);
+                    ball.SetStatusOfGoal();
 
-                    if (ball != null)
-                    {
-                        ball.SetStatusOfGoal();
+                    unit.MakeBusy();
 
-                        bot.MakeBusy();
+                    _globalStorage.FillBusyBallsColleñtion(ball);
 
-                        bot.BotRouter.MoveOnWay(ball, _baseStorage.transform.position);
-                    }
+                    unit.BotRouter.MoveOnWay(ball, _baseStorage.transform.position);
                 }
             }
         }
     }
 
-    private Ball GetOneCoin(Collider[] colliders)
+    private void SendBallsToGlobalStorage(Collider[] ballColliders)
+    {
+        foreach (var ball in ballColliders)
+        {
+            _globalStorage.FillFreeBallsCollection(ball);
+        }
+    }
+
+    private Ball TakeFreeBall()
     {
         Ball ball = null;
 
-        for (int i = 0; i < colliders.Length; i++)
+        if (_globalStorage.FreeBalls.Count > 0)
         {
-            balls.Add(colliders[i].GetComponent<Ball>());
+            ball = _globalStorage.GetFirstBallFreeBallsCollection();
         }
-
-        ball = balls.Find(item => item.IsUnderControl == false);
 
         return ball;
     }
 
     private void OnDisable()
     {
-        _radar.AreDetected -= ChooseBot;
+        _radar.AreDetected -= SendBallsToGlobalStorage;
+
+        _baseStorage.IsTouched -= _globalStorage.DeleteItemFromBusyCollection;
     }
 }

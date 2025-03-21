@@ -5,13 +5,12 @@ using UnityEngine;
 public class BaseRadar : MonoBehaviour
 {
     [SerializeField] private LayerMask _coinsLayerMask;
-    [SerializeField] private LayerMask _botLayerMask;
 
     private float _maxMonitoringRudius = 20;
     private float _intervalOfMonitoring = 1f;
     private WaitForSeconds _wait;
 
-    public event Action<Collider[], Collider[]> AreDetected;
+    public event Action<Collider[]> AreDetected;
 
     private void Awake()
     {
@@ -35,14 +34,7 @@ public class BaseRadar : MonoBehaviour
 
     private void Monitor()
     {
-        AreDetected?.Invoke(ObserveToBots(), ToDetectBalls());
-    }
-
-    private Collider[] ObserveToBots()
-    {
-        Collider[] botsColliders = Physics.OverlapSphere(transform.position, _maxMonitoringRudius, _botLayerMask);
-
-        return botsColliders;
+        AreDetected?.Invoke(ToDetectBalls());
     }
 
     private Collider[] ToDetectBalls()

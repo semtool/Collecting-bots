@@ -1,27 +1,25 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(ColorChanger))]
 public class Ball : MonoBehaviour
 {
     private Rigidbody _rigidbody;
+    private ColorChanger _colorChanger;
     private float _xCoordinateRelativeParent = 0f;
     private float _yCoordinateRelativeParent = 1f;
     private float _zCoordinateRelativeParent = 1f;
 
-    public bool IsUnderControl { get; private set; }
-
-    public Renderer Renderer { get; private set; }
-
     private void Awake()
     {
-        Renderer = GetComponent<Renderer>();
-
         _rigidbody = GetComponent<Rigidbody>();
+
+        _colorChanger = GetComponent<ColorChanger>();
     }
 
     public void MakeBusy(Transform botTransform)
     {
-        SetColorForStatusOfBusy();
+        SetColorStatusOfDelivering();
 
         CreateChildObject(botTransform);
 
@@ -34,31 +32,24 @@ public class Ball : MonoBehaviour
     {
         CanscelChildObject();
 
+        _colorChanger.SetColor(Color.white);
+
         _rigidbody.isKinematic = false;
     }
 
     public void SetStatusOfGoal()
     {
-        IsUnderControl = true;
-
-        SetColorForStatusOfGoal();
+        _colorChanger.SetColor(Color.red);
     }
 
     public void SetFreeStatus()
     {
-        IsUnderControl = false;
-
-        Renderer.material.color = Color.white;
+       _colorChanger.SetColor(Color.white);
     }
 
-    private void SetColorForStatusOfGoal()
+    private void SetColorStatusOfDelivering()
     {
-        Renderer.material.color = Color.red;
-    }
-
-    private void SetColorForStatusOfBusy()
-    {
-        Renderer.material.color = Color.green;
+        _colorChanger.SetColor(Color.green);
     }
 
     private void CreateChildObject(Transform botTransform)
