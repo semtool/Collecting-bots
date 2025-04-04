@@ -1,44 +1,57 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(BaseStorage))]
 public class GlobalResourceStorage : MonoBehaviour
 {
-    public Queue<Ball> FreeBalls { get; private set; }
-    public List<Ball> BusyBalls { get; private set; }
+    [SerializeField] private BallPool _ballPool;
+
+    private Queue<Ball> _freeBalls;
+    private List<Ball> _busyBalls;
+
+    public int FreeBallsCollectionLength => _freeBalls.Count;
 
     private void Awake()
     {
-        FreeBalls = new Queue<Ball>();
-        BusyBalls = new List<Ball>();
+        _freeBalls = new Queue<Ball>();
+        _busyBalls = new List<Ball>();
+    }
+
+    private void OnEnable()
+    {
+        _ballPool.ObjectIsInPool += DeleteItemFromBusyCollection;
+    }
+
+    private void OnDisable()
+    {
+        _ballPool.ObjectIsInPool -= DeleteItemFromBusyCollection;
     }
 
     public void FillFreeBallsCollection(Collider collider)
     {
         if (collider.TryGetComponent(out Ball ball))
         {
-            if (!FreeBalls.Contains(ball) && !BusyBalls.Contains(ball))
+            if (!_freeBalls.Contains(ball) && !_busyBalls.Contains(ball))
             {
-                FreeBalls.Enqueue(ball);
+                _freeBalls.Enqueue(ball);
             }
         }
     }
 
     public void FillBusyBallsColleñtion(Ball ball)
     {
-        if (!BusyBalls.Contains(ball))
+        if (!_busyBalls.Contains(ball))
         {
-            BusyBalls.Add(ball);
+            _busyBalls.Add(ball);
         }
     }
 
     public void DeleteItemFromBusyCollection(Ball ball)
     {
-        BusyBalls.Remove(ball);
+        _busyBalls.Remove(ball);
     }
 
     public Ball GetFirstBallFreeBallsCollection()
     {
-        return FreeBalls.Dequeue();
+        return _freeBalls.Dequeue();
     }
 }

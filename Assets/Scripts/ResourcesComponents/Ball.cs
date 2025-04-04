@@ -5,6 +5,7 @@ using UnityEngine;
 public class Ball : MonoBehaviour
 {
     private Rigidbody _rigidbody;
+    private Collider _collider;
     private ColorChanger _colorChanger;
     private float _xCoordinateRelativeParent = 0f;
     private float _yCoordinateRelativeParent = 1f;
@@ -13,6 +14,8 @@ public class Ball : MonoBehaviour
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+
+        _collider = GetComponent<Collider>();
 
         _colorChanger = GetComponent<ColorChanger>();
     }
@@ -23,6 +26,8 @@ public class Ball : MonoBehaviour
 
         CreateChildObject(botTransform);
 
+        _collider.enabled = false;
+
         _rigidbody.isKinematic = true;
 
         transform.localPosition = new Vector3(_xCoordinateRelativeParent, _yCoordinateRelativeParent, _zCoordinateRelativeParent);
@@ -32,9 +37,11 @@ public class Ball : MonoBehaviour
     {
         CanscelChildObject();
 
+        _collider.enabled = true;
+
         _colorChanger.SetColor(Color.white);
 
-        _rigidbody.isKinematic = false;
+        _rigidbody.isKinematic = false;        
     }
 
     public void SetStatusOfGoal()

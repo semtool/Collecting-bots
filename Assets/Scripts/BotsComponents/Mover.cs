@@ -2,10 +2,11 @@ using UnityEngine;
 
 public class Mover : MonoBehaviour
 {
+    [SerializeField] private float _botNotBusySpeed;
+    [SerializeField] private float _botBusySpeed;
+
     private float _botSpeed;
     private float _botSpeedOfRotation = 4f;
-    private float _botNotBusySpeed = 6f;
-    private float _botBusySpeed = 2f;
 
     public void Move(Vector3 goal)
     {

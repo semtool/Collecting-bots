@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class BaseRadar : MonoBehaviour
 {
-    [SerializeField] private LayerMask _coinsLayerMask;
+    [SerializeField] private LayerMask _ballLayerMask;
+    [SerializeField] public float _maxMonitoringRudius;
 
-    private float _maxMonitoringRudius = 20;
     private float _intervalOfMonitoring = 1f;
     private WaitForSeconds _wait;
 
@@ -26,9 +26,9 @@ public class BaseRadar : MonoBehaviour
     {
         while (enabled)
         {
-            Monitor();
-
             yield return _wait;
+
+            Monitor();
         }
     }
 
@@ -39,7 +39,7 @@ public class BaseRadar : MonoBehaviour
 
     private Collider[] ToDetectBalls()
     {
-        Collider[] ballColliders = Physics.OverlapSphere(transform.position, _maxMonitoringRudius, _coinsLayerMask);
+        Collider[] ballColliders = Physics.OverlapSphere(transform.position, _maxMonitoringRudius, _ballLayerMask);
 
         return ballColliders;
     }

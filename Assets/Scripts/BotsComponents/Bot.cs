@@ -4,9 +4,9 @@ using UnityEngine;
 [RequireComponent(typeof(ColorChanger))]
 public class Bot : MonoBehaviour
 {
-    [SerializeField] private BaseStorage _base;
-
     private ColorChanger _colorChanger;
+
+    public bool IsBuilder { get; private set; }
 
     public bool IsBusy { get; private set; }
 
@@ -29,6 +29,11 @@ public class Bot : MonoBehaviour
         BotRouter.IsFree += MakeNotBusy;
     }
 
+    private void OnDisable()
+    {
+        BotRouter.IsFree -= MakeNotBusy;
+    }
+
     public void MakeBusy()
     {
         IsBusy = true;
@@ -36,15 +41,20 @@ public class Bot : MonoBehaviour
         _colorChanger.SetColor(Color.black);
     }
 
-    private void MakeNotBusy()
+    public void MakeBuilder()
+    {
+        IsBuilder = true;
+    }
+
+    public void MakeNotBuilder()
+    {
+        IsBuilder = false;
+    }
+
+    public void MakeNotBusy()
     {
         IsBusy = false;
 
         _colorChanger.SetColor(Color.green);
-    }
-
-    private void OnDisable()
-    {
-        BotRouter.IsFree -= MakeNotBusy;
     }
 }

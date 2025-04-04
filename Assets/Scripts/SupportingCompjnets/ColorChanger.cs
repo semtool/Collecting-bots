@@ -13,4 +13,22 @@ public class ColorChanger : MonoBehaviour
     {
         _renderer.material.color = color;
     }
+
+    public void IncreaseAlfa()
+    {
+        Color selfColor = _renderer.material.color;
+
+        selfColor.a = 1;
+
+        _renderer.material.color = selfColor;
+    }
+
+    public void DecreaseAlfa()
+    {
+        Color selfColor = _renderer.material.color;
+
+        selfColor.a = 0.2f;
+
+        _renderer.material.color = selfColor;
+    }
 }

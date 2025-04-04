@@ -3,25 +3,25 @@ using TMPro;
 
 public class Informer : MonoBehaviour
 {
+    [SerializeField] private BaseStorage _baseStorage;
     [SerializeField] private TMP_Text _text;
-    [SerializeField] private BallSpawner _ballSpawner;
-
-    private int _counter = 0;
 
     private void OnEnable()
     {
-        _ballSpawner.IsInStorage += ShowNumber;
+        _baseStorage.IsCounted += ShowNumber;
+
+        _baseStorage.IsCorrected += ShowNumber;
     }
 
     private void OnDisable()
     {
-        _ballSpawner.IsInStorage += ShowNumber;
+        _baseStorage.IsCounted -= ShowNumber;
+
+        _baseStorage.IsCorrected -= ShowNumber;
     }
 
-    private void ShowNumber()
+    private void ShowNumber(int counter)
     {
-        _counter++;
-
-        _text.text = _counter.ToString();
+        _text.text = counter.ToString();
     }
 }

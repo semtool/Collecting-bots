@@ -5,9 +5,11 @@ using UnityEngine;
 [RequireComponent(typeof(Mover))]
 public class Router : MonoBehaviour
 {
+    private Bot _bot;
     private Mover _botMover;
     private Coroutine _coroutineForMovingToGoal;
     private Coroutine _coroutineForMovingToBase;
+    private Coroutine _coroutineForMovingToFlag;
     private float _distanceToGoal = 1f;
     private float _distanceToStorage = 3f;
 
@@ -15,17 +17,46 @@ public class Router : MonoBehaviour
 
     private void Awake()
     {
+        _bot = GetComponent<Bot>();
+
         _botMover = GetComponent<Mover>();
     }
 
-    public void MoveOnWay(Ball goal, Vector3 storage)
+    public void MoveOnWay(Ball goal, Base homeBase)
     {
         PrepareCoroutine(_coroutineForMovingToGoal);
 
-        _coroutineForMovingToGoal = StartCoroutine(MoveToGoal(goal, storage));
+        _coroutineForMovingToGoal = StartCoroutine(MoveToGoal(goal, homeBase));
     }
 
-    private IEnumerator MoveToGoal(Ball goal, Vector3 storage)
+    public void MoveToNewBasePlace(Flag flag)
+    {
+        PrepareCoroutine(_coroutineForMovingToFlag);
+
+        _coroutineForMovingToFlag = StartCoroutine(MoveToFlag(flag));
+    }
+
+    private IEnumerator MoveToFlag(Flag flag)
+    {
+        _botMover.SetBusySpeed();
+
+        while (transform.position != flag.transform.position)
+        {
+            _botMover.Move(flag.transform.position);
+
+            yield return null;
+        }
+
+        flag.SendNewBasePoint();
+
+        flag.SetStartCoordinates();
+
+        flag.InformBase();
+
+        _bot.MakeNotBusy();
+    }
+
+    private IEnumerator MoveToGoal(Ball goal, Base storage)
     {
         _botMover.SetNotBusySpeed();
 
@@ -43,13 +74,13 @@ public class Router : MonoBehaviour
         _coroutineForMovingToBase = StartCoroutine(MoveToBase(storage, goal));
     }
 
-    private IEnumerator MoveToBase(Vector3 storage, Ball goal)
+    private IEnumerator MoveToBase(Base storage, Ball goal)
     {
         _botMover.SetBusySpeed();
 
-        while (GetDistance(storage) > _distanceToStorage)
+        while (GetDistance(storage.transform.position) > _distanceToStorage)
         {
-            _botMover.Move(storage);
+            _botMover.Move(storage.transform.position);
 
             yield return null;
         }
