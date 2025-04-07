@@ -6,8 +6,7 @@ public class Bot : MonoBehaviour
 {
     private ColorChanger _colorChanger;
 
-    public bool IsBuilder { get; private set; }
-
+    public bool IsBuilder;
     public bool IsBusy { get; private set; }
 
     public Router BotRouter { get; private set; }

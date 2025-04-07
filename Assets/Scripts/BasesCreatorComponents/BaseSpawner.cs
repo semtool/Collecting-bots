@@ -11,37 +11,34 @@ public class BaseSpawner : MonoBehaviour
     [SerializeField] private Bot _botPfrefub;
     [SerializeField] private int _maxNumberOfBots;
 
-    private List<Base> _realBases = new();
     private float _verticalOffsetForFirstBase = 1.5f;
     private float _verticalOffsetForNewBase = 0.5f;
 
     private void Start()
     {
-        _realBases.Add(BuilldFirstBase());
+        BuilldFirstBase();
     }
 
     private void OnEnable()
     {
-        _map.HasNewBaseCoordinatas += AddNewBaseToList;
+        _map.HasNewBaseCoordinatas += BuildNewBase;
     }
 
     private void OnDisable()
     {
-        _map.HasNewBaseCoordinatas -= AddNewBaseToList;
+        _map.HasNewBaseCoordinatas -= BuildNewBase;
     }
 
-    private void AddNewBaseToList(Vector3 vector3, Base parentBase)
+    private void BuildNewBase(Vector3 vector3, Base parentBase)
     {
-        Base newBase = BuildNewBase(vector3, parentBase);
-
-        _realBases.Add(newBase);
+        CreateNewBase(vector3, parentBase);
 
         parentBase.CleareBuilderBotList();
 
         parentBase.ChangeBuildStatus();
     }
 
-    private Base BuilldFirstBase()
+    private void BuilldFirstBase()
     {
         Base firstBase = Instantiate(_basePrefub, new Vector3(0, _verticalOffsetForFirstBase, 0), Quaternion.identity);
 
@@ -50,11 +47,9 @@ public class BaseSpawner : MonoBehaviour
         firstBase.SetGlobalStorage(_resourceStorage);
 
         firstBase.RecieveFirstUsualBots(_maxNumberOfBots, _botPfrefub);
-
-        return firstBase;
     }
 
-    private Base BuildNewBase(Vector3 vector, Base parentBase)
+    private void CreateNewBase(Vector3 vector, Base parentBase)
     {
         Vector3 basePosition = SetStartPosition(vector);
 
@@ -65,8 +60,6 @@ public class BaseSpawner : MonoBehaviour
         newBase.SetGlobalStorage(_resourceStorage);
 
         ReceiveFirstBotFromParentBase(newBase, parentBase);
-
-        return newBase;
     }
 
     private Vector3 SetStartPosition(Vector3 vector)
@@ -76,16 +69,15 @@ public class BaseSpawner : MonoBehaviour
 
     private void ReceiveFirstBotFromParentBase(Base newBase, Base parentBase)
     {
-        foreach (var bot in parentBase.BuilderBots)
+        if(parentBase.OnlyBuilderBot != null)
         {
-            if (bot.IsBuilder == true)
-            {
-                parentBase.CleareBotList(bot);
+            parentBase.OnlyBuilderBot.MakeNotBuilder();
 
-                bot.MakeNotBuilder();
+            Bot bot = parentBase.OnlyBuilderBot;
 
-                newBase.ReceiveBot(bot);
-            }
+            parentBase.CleareBotList(parentBase.OnlyBuilderBot);
+
+            newBase.ReceiveBot(bot);
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using UnityEngine;
 
 [RequireComponent(typeof(BaseRadar))]
@@ -9,6 +8,7 @@ using UnityEngine;
 [RequireComponent(typeof(BaseDetector))]
 [RequireComponent(typeof(FlagTaker))]
 [RequireComponent(typeof(BotSpawner))]
+[RequireComponent(typeof(ResourceDetector))]
 public class Base : MonoBehaviour
 {
     [SerializeField] private Flag _ownFlag;
@@ -22,7 +22,7 @@ public class Base : MonoBehaviour
     private BaseRadar _radar;
     private BotSpawner _botSpawner;
     private BaseStorage _storage;
-    private Bot _onlyBuilderBot = null;
+    private ResourceDetector _resourceDetector;
     private WaitForSeconds _wait;
     private float _interval = 1f;
     private int _counterOfBallForNewBotCreation = 0;
@@ -30,13 +30,15 @@ public class Base : MonoBehaviour
     private int _numberBallsToPrepareBuilderBot = 5;
     private int _numberBallsToPrepareUsualBot = 3;
 
-    public ReadOnlyCollection<Bot> BuilderBots { get; private set; }
+    public Bot OnlyBuilderBot { get; private set; }
     public bool HasSentToBuildNewBase { get; private set; }
     public BallSpawner BallSpawner { get; private set; }
 
     private void Awake()
     {
         HasSentToBuildNewBase = false;
+
+        OnlyBuilderBot = null;
 
         _radar = GetComponent<BaseRadar>();
 
@@ -48,9 +50,9 @@ public class Base : MonoBehaviour
 
         _storage = GetComponent<BaseStorage>();
 
-        _wait = new WaitForSeconds(_interval);
+        _resourceDetector = GetComponent<ResourceDetector>();
 
-        BuilderBots = _builderBots.AsReadOnly();
+        _wait = new WaitForSeconds(_interval);
     }
 
     private void Start()
@@ -66,7 +68,7 @@ public class Base : MonoBehaviour
 
         _baseSelfDetector.IsTouched += UseOwnFlag;
 
-        _storage.IsPut += CreateNewUsualBot;
+        _resourceDetector.IsReceived += ÑollectResourcesToStorage;
 
         _botSpawner.IsCreated += PutNewBotToBotList;
 
@@ -81,7 +83,7 @@ public class Base : MonoBehaviour
 
         _baseSelfDetector.IsTouched -= UseOwnFlag;
 
-        _storage.IsPut -= CreateNewUsualBot;
+        _resourceDetector.IsReceived -= ÑollectResourcesToStorage;
 
         _botSpawner.IsCreated -= PutNewBotToBotList;
 
@@ -104,7 +106,7 @@ public class Base : MonoBehaviour
     {
         _builderBots.Clear();
 
-        _onlyBuilderBot = null;
+        OnlyBuilderBot = null;
     }
 
     public void CleareBotList(Bot bot)
@@ -112,15 +114,11 @@ public class Base : MonoBehaviour
         _bots.Remove(bot);
     }
 
-    public void RecieveFirstUsualBots(int counter, Bot bot)
+    public void RecieveFirstUsualBots(int maxNumberOfBots, Bot bot)
     {
-        int botCounter = 0;
-
-        while (botCounter < counter)
+        for (int i = 0; i < maxNumberOfBots; i++)
         {
             _bots.Add(Instantiate(bot));
-
-            botCounter++;
         }
     }
 
@@ -132,6 +130,15 @@ public class Base : MonoBehaviour
     public void ReceiveBot(Bot bot)
     {
         _bots.Add(bot);
+    }
+
+    private void ÑollectResourcesToStorage(Ball ball)
+    {
+        _storage.IncreaseNumberOfResourses();
+
+        BallSpawner.PutBallToPool(ball);
+
+        CreateNewUsualBot(_storage.BallCounter);
     }
 
     private IEnumerator SendBotsToBalls()
@@ -166,8 +173,10 @@ public class Base : MonoBehaviour
 
     private void SendBallsToGlobalStorage(Collider[] ballColliders)
     {
-        foreach (var ball in ballColliders)
+        foreach (var collider in ballColliders)
         {
+            Ball ball = collider.GetComponent<Ball>();
+
             _gobalStorage.FillFreeBallsCollection(ball);
         }
     }
@@ -184,11 +193,11 @@ public class Base : MonoBehaviour
         return ball != null;
     }
 
-    private void CreateNewUsualBot()
+    private void CreateNewUsualBot(int numberOfBalls)
     {
         _counterOfBallForNewBotCreation++;
 
-        if (_counterOfBallForNewBotCreation == _numberBallsToPrepareUsualBot)
+        if (numberOfBalls >= _numberBallsToPrepareUsualBot && _counterOfBallForNewBotCreation == _numberBallsToPrepareUsualBot)
         {
             LaunchBot();
 
@@ -208,9 +217,9 @@ public class Base : MonoBehaviour
 
     private void LaunchBot()
     {
-        _botSpawner.CreateNewBot();
-
         _storage.CorrectRealNumberBallsInStorage(_numberBallsToPrepareUsualBot);
+
+        _botSpawner.CreateNewBot();
     }
 
 
@@ -287,7 +296,7 @@ public class Base : MonoBehaviour
 
     private IEnumerator FindFreeBotToBuildNewBase()
     {
-        while (_onlyBuilderBot == null)
+        while (OnlyBuilderBot == null)
         {
             AppointBuilderBot();
 
@@ -308,7 +317,7 @@ public class Base : MonoBehaviour
         {
             foreach (var unit in _bots)
             {
-                if (_onlyBuilderBot == null)
+                if (OnlyBuilderBot == null)
                 {
                     if (unit.IsBusy == false && unit.IsBuilder == false && !HasSentToBuildNewBase)
                     {
@@ -318,9 +327,7 @@ public class Base : MonoBehaviour
 
                         unit.MakeBuilder();
 
-                        _builderBots.Add(unit);
-
-                        _onlyBuilderBot = unit;
+                        OnlyBuilderBot = unit;
 
                         _storage.CorrectRealNumberBallsInStorage(_numberBallsToPrepareBuilderBot);
                     }
@@ -331,6 +338,6 @@ public class Base : MonoBehaviour
 
     private void LaunchToOwnBaseFlag()
     {
-        _onlyBuilderBot.BotRouter.MoveToNewBasePlace(_ownFlag);
+        OnlyBuilderBot.BotRouter.MoveToNewBasePlace(_ownFlag);
     }
 }

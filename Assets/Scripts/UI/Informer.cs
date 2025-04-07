@@ -8,14 +8,14 @@ public class Informer : MonoBehaviour
 
     private void OnEnable()
     {
-        _baseStorage.IsCounted += ShowNumber;
+        _baseStorage.IsCountedForInformer += ShowNumber;
 
         _baseStorage.IsCorrected += ShowNumber;
     }
 
     private void OnDisable()
     {
-        _baseStorage.IsCounted -= ShowNumber;
+        _baseStorage.IsCountedForInformer -= ShowNumber;
 
         _baseStorage.IsCorrected -= ShowNumber;
     }

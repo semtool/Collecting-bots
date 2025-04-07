@@ -3,19 +3,20 @@ using UnityEngine;
 
 public class BaseStorage : MonoBehaviour
 {
-    private Base _home;
+    private int _startNumberOfCounter = 0;
 
-    public event Action<int> IsCounted;
+    public event Action<int> IsCountedForInformer;
+
+    public event Action<int> IsCountedForIn;
+
+
     public event Action<int> IsCorrected;
-    public event Action IsPut;
 
     public int BallCounter { get; private set; }
 
     private void Awake()
     {
-        _home = GetComponent<Base>();
-
-        BallCounter = 0;
+        BallCounter = _startNumberOfCounter;
     }
 
     public void CorrectRealNumberBallsInStorage(int numberOfBalls)
@@ -25,17 +26,10 @@ public class BaseStorage : MonoBehaviour
         IsCorrected?.Invoke(BallCounter);
     }
 
-    private void OnTriggerEnter(Collider collision)
+    public void IncreaseNumberOfResourses()
     {
-        if (collision.gameObject.TryGetComponent(out Ball item))
-        {
-            BallCounter++;
+        BallCounter++;
 
-            IsCounted?.Invoke(BallCounter);
-
-            IsPut?.Invoke();
-
-            _home.BallSpawner.PutBallToPool(item);
-        }
+        IsCountedForInformer?.Invoke(BallCounter);
     }
 }

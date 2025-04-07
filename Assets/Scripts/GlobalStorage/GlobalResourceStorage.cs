@@ -26,14 +26,11 @@ public class GlobalResourceStorage : MonoBehaviour
         _ballPool.ObjectIsInPool -= DeleteItemFromBusyCollection;
     }
 
-    public void FillFreeBallsCollection(Collider collider)
+    public void FillFreeBallsCollection(Ball ball)
     {
-        if (collider.TryGetComponent(out Ball ball))
+        if (!_freeBalls.Contains(ball) && !_busyBalls.Contains(ball))
         {
-            if (!_freeBalls.Contains(ball) && !_busyBalls.Contains(ball))
-            {
-                _freeBalls.Enqueue(ball);
-            }
+            _freeBalls.Enqueue(ball);
         }
     }
 
