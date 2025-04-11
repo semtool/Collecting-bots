@@ -167,6 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43ea01019a78cdf42a3aedfa433e65eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsBuilder: 0
 --- !u!114 &442181409606713256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,8 +180,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8e1fa70b10502a43bf85970f178020e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _botNotBusySpeed: 15
-  _botBusySpeed: 15
+  _botNotBusySpeed: 20
+  _botBusySpeed: 20
 --- !u!114 &8242696367362075876
 MonoBehaviour:
   m_ObjectHideFlags: 0

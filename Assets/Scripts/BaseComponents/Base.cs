@@ -1,48 +1,44 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BaseRadar))]
 [RequireComponent(typeof(BaseStorage))]
-[RequireComponent(typeof(BaseDetector))]
 [RequireComponent(typeof(FlagTaker))]
 [RequireComponent(typeof(BotSpawner))]
-[RequireComponent(typeof(ResourceDetector))]
+[RequireComponent(typeof(ResourceUnitDetector))]
 public class Base : MonoBehaviour
 {
     [SerializeField] private Flag _ownFlag;
 
     private List<Bot> _bots = new List<Bot>();
-    private List<Bot> _builderBots = new List<Bot>();
-    private Coroutine _coroutineForFindingBuilderBot;
-    private BaseDetector _baseSelfDetector;
+    private int _minNumberBots = 1;
     private GlobalResourceStorage _gobalStorage;
     private FlagTaker _flagTaker;
     private BaseRadar _radar;
     private BotSpawner _botSpawner;
     private BaseStorage _storage;
-    private ResourceDetector _resourceDetector;
-    private WaitForSeconds _wait;
-    private float _interval = 1f;
-    private int _counterOfBallForNewBotCreation = 0;
-    private int _startNumberOffUsedBalls = 0;
+    private ResourceUnitDetector _unitsDetector;
     private int _numberBallsToPrepareBuilderBot = 5;
     private int _numberBallsToPrepareUsualBot = 3;
 
+    public bool FlagIsInstaled { get; private set; }
+
     public Bot OnlyBuilderBot { get; private set; }
-    public bool HasSentToBuildNewBase { get; private set; }
+
+    public bool FlagIsTeken { get; private set; }
+
     public BallSpawner BallSpawner { get; private set; }
+
+    public Flag Flag { get; private set; }
+
+
+    public bool BaseIsBuisHitRay = false;
 
     private void Awake()
     {
-        HasSentToBuildNewBase = false;
-
         OnlyBuilderBot = null;
 
         _radar = GetComponent<BaseRadar>();
-
-        _baseSelfDetector = GetComponent<BaseDetector>();
 
         _flagTaker = GetComponent<FlagTaker>();
 
@@ -50,46 +46,58 @@ public class Base : MonoBehaviour
 
         _storage = GetComponent<BaseStorage>();
 
-        _resourceDetector = GetComponent<ResourceDetector>();
+        _unitsDetector = GetComponent<ResourceUnitDetector>();
 
-        _wait = new WaitForSeconds(_interval);
+        Flag = _ownFlag;
     }
 
     private void Start()
     {
-        StartCoroutine(SendBotsToBalls());
-
         _ownFlag.TurnOnChildObject(gameObject.transform);
+
+        FlagIsInstaled = false;
+
+        _ownFlag.SetStatusNotTakenFromBase();
     }
 
     private void OnEnable()
     {
-        _radar.AreDetected += SendBallsToGlobalStorage;
+        _radar.AreDetected += AccumulateBallsInBaseStorage;
 
-        _baseSelfDetector.IsTouched += UseOwnFlag;
-
-        _resourceDetector.IsReceived += ÑollectResourcesToStorage;
+        _unitsDetector.IsReceived += UseResourcesFromStorage;
 
         _botSpawner.IsCreated += PutNewBotToBotList;
 
-        _ownFlag.IsReicevedNewBaseCoordinatas += LaunchBotToBuildNewBase;
-
-        _ownFlag.IsReturnedOnParentBase += StopSearchBuilderBot;
+        _ownFlag.IsReturnedOnParentBase += SetToParentBaseUsualOperatingMode;
     }
 
     private void OnDisable()
     {
-        _radar.AreDetected -= SendBallsToGlobalStorage;
+        _radar.AreDetected -= AccumulateBallsInBaseStorage;
 
-        _baseSelfDetector.IsTouched -= UseOwnFlag;
-
-        _resourceDetector.IsReceived -= ÑollectResourcesToStorage;
+        _unitsDetector.IsReceived -= UseResourcesFromStorage;
 
         _botSpawner.IsCreated -= PutNewBotToBotList;
 
-        _ownFlag.IsReicevedNewBaseCoordinatas -= LaunchBotToBuildNewBase;
+        _ownFlag.IsReturnedOnParentBase -= SetToParentBaseUsualOperatingMode;
+    }
 
-        _ownFlag.IsReturnedOnParentBase -= StopSearchBuilderBot;
+   
+    public void SetFlagIsNotTakenFromBase()
+    {
+        FlagIsTeken = false;
+    }
+
+    public void ChangeFlagStatusReturnedToParentBase()
+    {
+        FlagIsInstaled = false;
+
+        _ownFlag.SetStatusNotTakenFromBase();
+    }
+
+    public void ChangeFlagStatusInstalledForNewBase()
+    {
+        FlagIsInstaled = true;
     }
 
     public void SetPool(BallSpawner ballSpawner)
@@ -104,8 +112,6 @@ public class Base : MonoBehaviour
 
     public void CleareBuilderBotList()
     {
-        _builderBots.Clear();
-
         OnlyBuilderBot = null;
     }
 
@@ -114,17 +120,12 @@ public class Base : MonoBehaviour
         _bots.Remove(bot);
     }
 
-    public void RecieveFirstUsualBots(int maxNumberOfBots, Bot bot)
+    public void RecieveFirstUsualBots(int maxNumberOfBots, Bot prefubBot)
     {
         for (int i = 0; i < maxNumberOfBots; i++)
         {
-            _bots.Add(Instantiate(bot));
+            _bots.Add(Instantiate(prefubBot));
         }
-    }
-
-    public void ChangeBuildStatus()
-    {
-        HasSentToBuildNewBase = false;
     }
 
     public void ReceiveBot(Bot bot)
@@ -132,23 +133,41 @@ public class Base : MonoBehaviour
         _bots.Add(bot);
     }
 
-    private void ÑollectResourcesToStorage(Ball ball)
+    public void UseOwnFlag()
     {
-        _storage.IncreaseNumberOfResourses();
+        if (_ownFlag != null)
+        {
+            if (_ownFlag.IsTakenFromBase == false)
+            {
+                _flagTaker.TakeFlagFromBase(_ownFlag);
 
-        BallSpawner.PutBallToPool(ball);
+                _ownFlag.SetStatusTakenFromBase();
 
-        CreateNewUsualBot(_storage.BallCounter);
+                _ownFlag.SetStatusNotTakenFromField();
+
+                SetFlagIsTakenFromBase();
+            }
+            else
+            {
+                _flagTaker.PutFlagToBase(_ownFlag);
+
+                _ownFlag.SetStatusNotTakenFromBase();
+
+                SetFlagIsNotTakenFromBase();
+            }
+        }
     }
 
-    private IEnumerator SendBotsToBalls()
+    private void AccumulateBallsInBaseStorage(Collider[] ballColliders)
     {
-        while (enabled)
+        foreach (var collider in ballColliders)
         {
-            yield return _wait;
+            Ball ball = collider.GetComponent<Ball>();
 
-            SendBotToBall();
+            _gobalStorage.FillFreeBallsCollection(ball);
         }
+
+        SendBotToBall();
     }
 
     private void SendBotToBall()
@@ -171,16 +190,6 @@ public class Base : MonoBehaviour
         }
     }
 
-    private void SendBallsToGlobalStorage(Collider[] ballColliders)
-    {
-        foreach (var collider in ballColliders)
-        {
-            Ball ball = collider.GetComponent<Ball>();
-
-            _gobalStorage.FillFreeBallsCollection(ball);
-        }
-    }
-
     private bool TakeFreeBall(out Ball ball)
     {
         ball = null;
@@ -193,25 +202,39 @@ public class Base : MonoBehaviour
         return ball != null;
     }
 
-    private void CreateNewUsualBot(int numberOfBalls)
+    private void SetFlagIsTakenFromBase()
     {
-        _counterOfBallForNewBotCreation++;
+        FlagIsTeken = true;
+    }
 
-        if (numberOfBalls >= _numberBallsToPrepareUsualBot && _counterOfBallForNewBotCreation == _numberBallsToPrepareUsualBot)
+    private void UseResourcesFromStorage(Ball ball)
+    {
+        _storage.IncreaseNumberOfResourses();
+
+        BallSpawner.PutBallToPool(ball);
+
+        if (FlagIsInstaled && _bots.Count > _minNumberBots && FlagIsTeken)
         {
-            LaunchBot();
-
-            _counterOfBallForNewBotCreation = _startNumberOffUsedBalls;
+            AppointBuilderBot();
+        }
+        else
+        {
+            CreateNewUsualBot(_storage.BallCounter);
         }
     }
 
-    private void CreateNewUsualBotFromeExcess()
+    private void PutNewBotToBotList(Bot bot)
     {
-        if (_counterOfBallForNewBotCreation >= _numberBallsToPrepareUsualBot)
+        _bots.Add(bot);
+
+        SetStartPosition(bot);
+    }
+
+    private void CreateNewUsualBot(int numberOfBalls)
+    {
+        if (numberOfBalls >= _numberBallsToPrepareUsualBot)
         {
             LaunchBot();
-
-            _counterOfBallForNewBotCreation = _storage.BallCounter;
         }
     }
 
@@ -222,107 +245,21 @@ public class Base : MonoBehaviour
         _botSpawner.CreateNewBot();
     }
 
-
-    private void PutNewBotToBotList(Bot bot)
-    {
-        _bots.Add(bot);
-
-        SetStartPosition(bot);
-    }
-
     private void SetStartPosition(Bot bot)
     {
         bot.transform.position = transform.position;
     }
 
-    private void UseOwnFlag()
-    {
-        if (_ownFlag != null)
-        {
-            if (_ownFlag.IsTakenFromBase == false)
-            {
-                _flagTaker.TakeFlagFromBase(_ownFlag);
-
-                _ownFlag.SetStatusTakenFromBase();
-
-                _ownFlag.SetStatusNotTakenFromField();
-            }
-            else
-            {
-                _flagTaker.PutFlagToBase(_ownFlag);
-
-                _ownFlag.SetStatusNotTakenFromBase();
-
-                _ownFlag.SetStatusNotTakenFromField();
-            }
-        }
-    }
-
-    private void StopSearchBuilderBot()
-    {
-        if (_coroutineForFindingBuilderBot != null)
-        {
-            StopCoroutine(_coroutineForFindingBuilderBot);
-
-            _coroutineForFindingBuilderBot = null;
-
-            _counterOfBallForNewBotCreation = _storage.BallCounter;
-
-            StartCoroutine(UseStorageOccupancyRate());
-        }
-    }
-
-    private IEnumerator UseStorageOccupancyRate()
-    {
-        while (true)
-        {
-            CreateNewUsualBotFromeExcess();
-
-            yield return null;
-        }
-    }
-
-    private void LaunchBotToBuildNewBase()
-    {
-        if (_coroutineForFindingBuilderBot != null)
-        {
-            StopCoroutine(_coroutineForFindingBuilderBot);
-
-            _coroutineForFindingBuilderBot = null;
-        }
-
-        _coroutineForFindingBuilderBot = StartCoroutine(FindFreeBotToBuildNewBase());
-    }
-
-    private IEnumerator FindFreeBotToBuildNewBase()
-    {
-        while (OnlyBuilderBot == null)
-        {
-            AppointBuilderBot();
-
-            yield return null;
-        }
-
-        LaunchToOwnBaseFlag();
-    }
-
     private void AppointBuilderBot()
     {
-        if (_storage.BallCounter <= _numberBallsToPrepareBuilderBot)
-        {
-            _counterOfBallForNewBotCreation = 0;
-        }
-
-        if (_bots.Count > 1 && _storage.BallCounter >= _numberBallsToPrepareBuilderBot)
+        if (_storage.BallCounter >= _numberBallsToPrepareBuilderBot)
         {
             foreach (var unit in _bots)
             {
                 if (OnlyBuilderBot == null)
                 {
-                    if (unit.IsBusy == false && unit.IsBuilder == false && !HasSentToBuildNewBase)
+                    if (unit.IsBusy == false && unit.IsBuilder == false)
                     {
-                        HasSentToBuildNewBase = true;
-
                         unit.MakeBusy();
 
                         unit.MakeBuilder();
@@ -330,6 +267,8 @@ public class Base : MonoBehaviour
                         OnlyBuilderBot = unit;
 
                         _storage.CorrectRealNumberBallsInStorage(_numberBallsToPrepareBuilderBot);
+
+                        LaunchToOwnBaseFlag();
                     }
                 }
             }
@@ -339,5 +278,21 @@ public class Base : MonoBehaviour
     private void LaunchToOwnBaseFlag()
     {
         OnlyBuilderBot.BotRouter.MoveToNewBasePlace(_ownFlag);
+    }
+
+    private void SetToParentBaseUsualOperatingMode()
+    {
+        ChangeFlagStatusReturnedToParentBase();
+
+        if (OnlyBuilderBot != null)
+        {
+            OnlyBuilderBot.BotRouter.StopMoveToBuildNewBase();
+
+            OnlyBuilderBot.MakeNotBusy();
+
+            OnlyBuilderBot = null;
+        }
+
+        CreateNewUsualBot(_storage.BallCounter);
     }
 }

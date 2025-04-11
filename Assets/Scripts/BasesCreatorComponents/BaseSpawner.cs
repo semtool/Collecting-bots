@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Vector3 = UnityEngine.Vector3;
 
@@ -34,8 +33,6 @@ public class BaseSpawner : MonoBehaviour
         CreateNewBase(vector3, parentBase);
 
         parentBase.CleareBuilderBotList();
-
-        parentBase.ChangeBuildStatus();
     }
 
     private void BuilldFirstBase()
@@ -60,6 +57,11 @@ public class BaseSpawner : MonoBehaviour
         newBase.SetGlobalStorage(_resourceStorage);
 
         ReceiveFirstBotFromParentBase(newBase, parentBase);
+
+        parentBase.ChangeFlagStatusReturnedToParentBase();
+
+        parentBase.SetFlagIsNotTakenFromBase();
+
     }
 
     private Vector3 SetStartPosition(Vector3 vector)
@@ -77,7 +79,7 @@ public class BaseSpawner : MonoBehaviour
 
             parentBase.CleareBotList(parentBase.OnlyBuilderBot);
 
-            newBase.ReceiveBot(bot);
+            newBase.ReceiveBot(bot);            
         }
     }
 }

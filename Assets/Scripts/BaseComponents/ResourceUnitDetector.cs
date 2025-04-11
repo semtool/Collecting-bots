@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class ResourceDetector : MonoBehaviour
+public class ResourceUnitDetector : MonoBehaviour
 {
     public event Action<Ball> IsReceived;
 

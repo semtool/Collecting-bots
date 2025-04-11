@@ -1,11 +1,13 @@
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(ColorChanger))]
 public class Ball : MonoBehaviour
 {
     private Rigidbody _rigidbody;
-    private Collider _collider;
+    public Collider _collider;
     private ColorChanger _colorChanger;
     private float _xCoordinateRelativeParent = 0f;
     private float _yCoordinateRelativeParent = 1f;
@@ -33,6 +35,7 @@ public class Ball : MonoBehaviour
         transform.localPosition = new Vector3(_xCoordinateRelativeParent, _yCoordinateRelativeParent, _zCoordinateRelativeParent);
     }
 
+
     public void MakeNotBusy()
     {
         CanscelChildObject();
@@ -41,7 +44,7 @@ public class Ball : MonoBehaviour
 
         _colorChanger.SetColor(Color.white);
 
-        _rigidbody.isKinematic = false;        
+        _rigidbody.isKinematic = false;
     }
 
     public void SetStatusOfGoal()
@@ -51,7 +54,7 @@ public class Ball : MonoBehaviour
 
     public void SetFreeStatus()
     {
-       _colorChanger.SetColor(Color.white);
+        _colorChanger.SetColor(Color.white);
     }
 
     private void SetColorStatusOfDelivering()

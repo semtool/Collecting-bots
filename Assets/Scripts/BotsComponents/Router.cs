@@ -11,7 +11,7 @@ public class Router : MonoBehaviour
     private Coroutine _coroutineForMovingToBase;
     private Coroutine _coroutineForMovingToFlag;
     private float _distanceToGoal = 1f;
-    private float _distanceToStorage = 3f;
+    private float _distanceToStorage = 5f;
 
     public event Action IsFree;
 
@@ -27,6 +27,16 @@ public class Router : MonoBehaviour
         PrepareCoroutine(_coroutineForMovingToGoal);
 
         _coroutineForMovingToGoal = StartCoroutine(MoveToGoal(goal, homeBase));
+    }
+
+    public void StopMoveToBuildNewBase()
+    {
+        if (_coroutineForMovingToFlag != null)
+        {
+            StopCoroutine(_coroutineForMovingToFlag);
+
+            _coroutineForMovingToFlag = null;
+        }
     }
 
     public void MoveToNewBasePlace(Flag flag)
@@ -88,6 +98,7 @@ public class Router : MonoBehaviour
         IsFree?.Invoke();
 
         goal.MakeNotBusy();
+
     }
 
     private void PrepareCoroutine(Coroutine coroutine)

@@ -7,9 +7,6 @@ public class BaseStorage : MonoBehaviour
 
     public event Action<int> IsCountedForInformer;
 
-    public event Action<int> IsCountedForIn;
-
-
     public event Action<int> IsCorrected;
 
     public int BallCounter { get; private set; }

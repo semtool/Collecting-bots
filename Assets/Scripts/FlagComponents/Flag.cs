@@ -2,8 +2,6 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(FlagTransporter))]
-[RequireComponent(typeof(FlagInstaller))]
-[RequireComponent(typeof(FlagSelfDetector))]
 [RequireComponent(typeof(ColorChanger))]
 public class Flag : MonoBehaviour
 {
@@ -11,7 +9,6 @@ public class Flag : MonoBehaviour
     private FlagTransporter _flagTransporter;
     private float _verticalOffset = 1f;
 
-    public event Action IsReicevedNewBaseCoordinatas;
     public event Action<Vector3, Base> NewBasePointIsGot;
     public event Action IsReturnedOnParentBase;
 
@@ -19,15 +16,11 @@ public class Flag : MonoBehaviour
 
     public bool IsTakenFromField { get; private set; }
 
-    public FlagInstaller FlagInstaller { get; private set; }
-
     public ColorChanger ColorChanger { get; private set; }
 
     private void Awake()
     {
         _flagTransporter = GetComponent<FlagTransporter>();
-
-        FlagInstaller = GetComponent<FlagInstaller>();
 
         _parentBase = this.GetComponentInParent<Base>();
 
@@ -39,18 +32,13 @@ public class Flag : MonoBehaviour
         TurnOffTransporter();
 
         SetStatusNotTakenFromBase();
-
-        FlagInstaller.MonitorPointOfSticking(this);
     }
 
-    private void OnEnable()
+    public void MoveFlag()
     {
-        FlagInstaller.IsInstalled += SendSignalToLaunchBot;
-    }
+        SetStatusNotTakenFromField();
 
-    private void OnDisable()
-    {
-        FlagInstaller.IsInstalled -= SendSignalToLaunchBot;
+        TurnOnTransporter();
     }
 
     public void SetStatusTakenFromBase()
@@ -63,11 +51,6 @@ public class Flag : MonoBehaviour
         IsTakenFromBase = false;
     }
 
-    public void SetStatusTakenFromField()
-    {
-        IsTakenFromField = true;
-    }
-
     public void SetStatusNotTakenFromField()
     {
         IsTakenFromField = false;
@@ -78,15 +61,6 @@ public class Flag : MonoBehaviour
         gameObject.transform.SetParent(baseTransform);
 
         SetStartCoordinates();
-    }
-
-    public void SetCoordinates(Vector3 vector)
-    {
-        Vector3 vector1 = vector;
-
-        vector1.y = _verticalOffset;
-
-        transform.position = vector1;
     }
 
     public void TurnOffTransporter()
@@ -103,7 +77,9 @@ public class Flag : MonoBehaviour
     {
         transform.localPosition = Vector3.zero;
 
-        ColorChanger.DecreaseAlfa();      
+        ColorChanger.DecreaseAlfa();
+
+        SetStatusNotTakenFromBase();
     }
 
     public void InformBase()
@@ -116,8 +92,35 @@ public class Flag : MonoBehaviour
         NewBasePointIsGot?.Invoke(transform.position, _parentBase);
     }
 
-    private void SendSignalToLaunchBot()
+    public void SendSignalToLaunchBot(Map map, Vector3 vector)
     {
-        IsReicevedNewBaseCoordinatas?.Invoke();
+        _parentBase.ChangeFlagStatusInstalledForNewBase();
+
+        if (IsTakenFromBase && !IsTakenFromField && _parentBase.FlagIsInstaled)
+        {
+            NewBasePointIsGot -= map.SendGoordinatesToBaseSpawner;
+
+            TurnOffTransporter();
+
+            SetCoordinates(vector);
+
+            SetStatusTakenFromField();
+
+            NewBasePointIsGot += map.SendGoordinatesToBaseSpawner;
+        }
+    }
+
+    private void SetStatusTakenFromField()
+    {
+        IsTakenFromField = true;
+    }
+
+    private void SetCoordinates(Vector3 vector)
+    {
+        Vector3 vector1 = vector;
+
+        vector1.y = _verticalOffset;
+
+        transform.position = vector1;
     }
 }

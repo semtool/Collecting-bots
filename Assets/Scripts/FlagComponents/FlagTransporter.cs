@@ -4,6 +4,8 @@ public class FlagTransporter : MonoBehaviour
 {
     [SerializeField] private LayerMask _layerMask;
 
+    private float _verticalOffSet = 5f;
+
     private void Update()
     {
         _layerMask = ~_layerMask;
@@ -14,16 +16,13 @@ public class FlagTransporter : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, _layerMask))
         {
-            if (hit.collider != null)
+            if (hit.collider.gameObject.TryGetComponent(out Map component))
             {
-                if (hit.collider.gameObject.TryGetComponent(out Map component))
-                {
-                    Vector3 cusorPoint = hit.point;
+                Vector3 cusorPoint = hit.point;
 
-                    cusorPoint.y = component.transform.position.y + 3f;
+                cusorPoint.y = component.transform.position.y + _verticalOffSet;
 
-                    transform.position = cusorPoint;
-                }
+                transform.position = cusorPoint;
             }
         }
     }

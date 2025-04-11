@@ -14,8 +14,6 @@ public class BallSpawner : MonoBehaviour
 
     private WaitForSeconds _wait;
 
-    public event Action IsPutInStorage;
-
     private void Awake()
     {
         _wait = new WaitForSeconds(_spawnInterval);
@@ -64,7 +62,7 @@ public class BallSpawner : MonoBehaviour
 
     public void PutBallToPool(Ball item)
     {
-        IsPutInStorage?.Invoke();
+        //IsPutInStorage?.Invoke();
 
         _pool.PutObjectToPool(item);
     }
