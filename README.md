@@ -11,7 +11,7 @@
 - C# ООП MVP
 - ObjectPool
 - Generics
-- Unity UI System                     |
+- Unity UI System                    
 
 ## Управление
 Действие  Компьюторная	Мышь
