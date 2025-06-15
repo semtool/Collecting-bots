@@ -58,6 +58,8 @@ public class Base : MonoBehaviour
         FlagIsInstaled = false;
 
         _ownFlag.SetStatusNotTakenFromBase();
+
+        var position = Vector3.up.normalized;
     }
 
     private void OnEnable()
@@ -82,7 +84,6 @@ public class Base : MonoBehaviour
         _ownFlag.IsReturnedOnParentBase -= SetToParentBaseUsualOperatingMode;
     }
 
-   
     public void SetFlagIsNotTakenFromBase()
     {
         FlagIsTeken = false;

@@ -1,10 +1,7 @@
-using System;
 using UnityEngine;
 
 public class FlagTaker : MonoBehaviour
 {
-    public event Action<Flag> FlagIsTaken;
-
     public void TakeFlagFromBase(Flag flag)
     {
         flag.ColorChanger.IncreaseAlfa();
