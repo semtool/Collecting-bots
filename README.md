@@ -20,10 +20,9 @@
 
 | Категория       | Используемые технологии           |
 |----------------|----------------------------------|
-| **Архитектура** | MVC, ECS, Scriptable Objects     |
+| **Архитектура** | MVP     |
 | **Графика**    | URP, Shader Graph, VFX Graph     |
 | **Анимация**   | Timeline, Cinemachine            |
-| **Плагины**    | DOTween, Odin Inspector          |
 
 ## 🖼️ Скриншоты
 | ![Скриншот 1](https://via.placeholder.com/400x225?text=Screenshot+1) | ![Скриншот 2](https://via.placeholder.com/400x225?text=Screenshot+2) |
