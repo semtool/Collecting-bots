@@ -15,3 +15,6 @@
 | **Графика**    | URP, Shader Graph, VFX Graph     |
 | **Анимация**   | Timeline, Cinemachine            |
 | **Плагины**    | DOTween, Odin Inspector          |
+
+🎮 Управление
+Действие	Мышь
